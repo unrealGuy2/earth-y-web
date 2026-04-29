@@ -1,9 +1,10 @@
 import "./globals.scss";
 
 export const metadata = {
-  title: "Earth-Y | Coastal Risk Assessment",
-  description: "Physics-Informed Neural Network for Coastal Erosion Prediction",
+  title: "Earth-Y | AI Intelligence for Earth Risk Monitoring",
+  description: "Earth-Y analyzes satellite and environmental data using artificial intelligence to detect land instability and environmental risks.",
 };
+
 
 export default function RootLayout({
   children,
