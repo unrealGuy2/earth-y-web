@@ -18,7 +18,7 @@ export default function Home() {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
-  // --- THE ENTERPRISE PDF GENERATOR (Now Async for Mapbox Image) ---
+  // --- THE ENTERPRISE PDF GENERATOR ---
   const exportPDF = async () => {
     if (!telemetry || isLoading) {
       alert("Please generate a valid risk report first.");
@@ -101,6 +101,39 @@ export default function Home() {
     yPos += 10;
     doc.setTextColor(20, 20, 20);
     doc.text(`Physics-Informed Confidence: ${telemetry.confidence}`, 20, yPos);
+
+    // --- NEW: Geomorphological Profile (For the NAPE Lecturers) ---
+    if (telemetry.geologyMetrics) {
+      yPos += 20;
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(20, 20, 20);
+      doc.text("Geomorphological Profile (SRTM DEM)", 20, yPos);
+      
+      yPos += 8;
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 100, 100);
+      
+      // Print Elevation & Slope
+      doc.text(`Base Elevation: ${telemetry.geologyMetrics.elevation}`, 20, yPos);
+      doc.text(`Coastal Slope Gradient: ${telemetry.geologyMetrics.slopeGradient}`, 100, yPos);
+      
+      yPos += 8;
+      // Print Flood Risk with emphasis if Severe
+      if (telemetry.geologyMetrics.floodingVulnerability.includes("Severe")) doc.setTextColor(230, 0, 0);
+      else doc.setTextColor(20, 20, 20);
+      doc.text(`Flooding Vulnerability: ${telemetry.geologyMetrics.floodingVulnerability}`, 20, yPos);
+      
+      yPos += 8;
+      // Print Erosion Risk with emphasis if High
+      if (telemetry.geologyMetrics.erosionSusceptibility.includes("High")) doc.setTextColor(230, 0, 0);
+      else doc.setTextColor(20, 20, 20);
+      doc.text(`Erosion Susceptibility: ${telemetry.geologyMetrics.erosionSusceptibility}`, 20, yPos);
+      
+      // Reset color for the next section
+      doc.setTextColor(20, 20, 20);
+    }
 
     // --- Enterprise Defensibility ---
     if (telemetry.basisOfPrediction) {
