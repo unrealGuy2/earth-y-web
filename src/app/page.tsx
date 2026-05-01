@@ -18,7 +18,6 @@ export default function Home() {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
-  // --- THE ENTERPRISE PDF GENERATOR (WITH PAGE BREAKS) ---
   const exportPDF = async () => {
     if (!telemetry || isLoading) {
       alert("Please generate a valid risk report first.");
@@ -29,14 +28,12 @@ export default function Home() {
     let yPos = 20;
     const pageHeight = doc.internal.pageSize.getHeight();
 
-    // --- 1. CREDIBILITY FRAMING ---
     doc.setFontSize(9);
     doc.setTextColor(120, 120, 120);
     doc.text("Preliminary risk projection based on multi-year satellite observation and physics-constrained modeling.", 20, yPos);
     
     yPos += 15;
 
-    // --- Header ---
     doc.setFont("helvetica", "bold");
     doc.setFontSize(24);
     doc.setTextColor(20, 20, 20);
@@ -46,25 +43,23 @@ export default function Home() {
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(100, 100, 100);
-    doc.text("Automated Coastal Morphology Projection", 20, yPos);
+    doc.text("Coastal Risk Projection Report", 20, yPos);
     
     yPos += 5;
     doc.setDrawColor(200, 200, 200);
     doc.line(20, yPos, 190, yPos);
     
-    // --- Target Asset ---
     yPos += 15;
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(20, 20, 20);
     doc.text(`Target Asset: ${telemetry.city.toUpperCase()} COASTLINE`, 20, yPos);
     
-    // --- 2. THE VISUAL (Mapbox Static Snapshot) ---
     yPos += 10;
     try {
       const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
       const pinColor = telemetry.risk === "Critical" ? "ff0000" : telemetry.risk === "Elevated" ? "ff8800" : "00ff00";
-      const staticMapUrl = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-s+${pinColor}(${location.lng},${location.lat})/${location.lng},${location.lat},13,0/800x400?access_token=${mapboxToken}`;
+      const staticMapUrl = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-l+${pinColor}(${location.lng},${location.lat})/${location.lng},${location.lat},13,0/800x400?access_token=${mapboxToken}`;
       
       const imgRes = await fetch(staticMapUrl);
       const imgBlob = await imgRes.blob();
@@ -76,7 +71,14 @@ export default function Home() {
       });
 
       doc.addImage(base64Map, 'PNG', 20, yPos, 170, 85);
-      yPos += 95; 
+      yPos += 90; 
+      
+      doc.setFontSize(9);
+      doc.setTextColor(150, 150, 150);
+      const legendText = pinColor === "ff0000" ? "Red (Critical)" : pinColor === "ff8800" ? "Orange (Elevated)" : "Green (Low)";
+      doc.text(`Visual Legend: Target Asset marked by ${legendText} indicator. Coastline proximity visible at 13x zoom.`, 20, yPos);
+      yPos += 10;
+
     } catch (err) {
       console.error("Map snapshot failed:", err);
       doc.setFontSize(10);
@@ -85,13 +87,13 @@ export default function Home() {
       yPos += 10;
     }
 
-    // --- 3. THE AGGRESSIVE HEADLINE ---
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(20, 20, 20);
     doc.text(`Estimated ${telemetry.landLoss} shoreline retreat by ${telemetry.year}`, 20, yPos);
     
     yPos += 10;
+    
     doc.setFontSize(14);
     if (telemetry.risk === "Critical") doc.setTextColor(230, 0, 0);
     else if (telemetry.risk === "Elevated") doc.setTextColor(200, 100, 0);
@@ -99,11 +101,25 @@ export default function Home() {
     
     doc.text(`Infrastructural Risk Level: ${telemetry.risk}`, 20, yPos);
     
-    yPos += 10;
+    yPos += 6;
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.setFont("helvetica", "normal");
+    const riskDetailLines = doc.splitTextToSize(`Assessment: ${telemetry.riskDetail}`, 170);
+    doc.text(riskDetailLines, 20, yPos);
+    yPos += (riskDetailLines.length * 6) + 4;
+    
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
     doc.setTextColor(20, 20, 20);
-    doc.text(`Physics-Informed Confidence: ${telemetry.confidence}`, 20, yPos);
+    doc.text(`Model Confidence: ${telemetry.confidenceLevel}`, 20, yPos);
+    
+    yPos += 6;
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.setFont("helvetica", "normal");
+    doc.text(`(${telemetry.confidenceReason})`, 20, yPos);
 
-    // --- NEW: Geomorphological Profile ---
     if (telemetry.geologyMetrics) {
       yPos += 20;
       doc.setFontSize(14);
@@ -132,9 +148,7 @@ export default function Home() {
       doc.setTextColor(20, 20, 20);
     }
 
-    // --- Enterprise Defensibility ---
     if (telemetry.basisOfPrediction) {
-      // PAGE BREAK CHECK 1
       if (yPos > 240) { doc.addPage(); yPos = 20; } else { yPos += 20; }
       
       doc.setFontSize(14);
@@ -156,9 +170,7 @@ export default function Home() {
       yPos += (modelLines.length * 6) + 5;
     }
 
-    // --- Infrastructure Implications ---
     if (telemetry.infrastructureImplications && telemetry.infrastructureImplications.length > 0) {
-      // PAGE BREAK CHECK 2
       if (yPos > 240) { doc.addPage(); yPos = 20; } else { yPos += 10; }
       
       doc.setFontSize(14);
@@ -170,7 +182,6 @@ export default function Home() {
       doc.setFont("helvetica", "normal");
       
       telemetry.infrastructureImplications.forEach((implication: string) => {
-        // DYNAMIC PAGE BREAK CHECK (In case the list is super long)
         if (yPos > 270) { doc.addPage(); yPos = 20; }
         
         const lines = doc.splitTextToSize(`• ${implication}`, 170);
@@ -179,10 +190,8 @@ export default function Home() {
       });
     }
 
-    // --- Footer ---
     doc.setFontSize(10);
     doc.setTextColor(150, 150, 150);
-    // Pin the footer to the absolute bottom of whatever the current page is
     doc.text("Generated by the Earth-Y AI Engine. Powered by Google Earth Engine & PyTorch.", 20, pageHeight - 10);
     
     doc.save(`Earth_Y_Report_${telemetry.city.replace(/\s+/g, '_')}.pdf`);

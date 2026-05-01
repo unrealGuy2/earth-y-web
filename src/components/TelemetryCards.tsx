@@ -5,12 +5,10 @@ import styles from "./TelemetryCards.module.scss";
 export default function TelemetryCards({ data }: { data: any }) {
   if (!data) return null;
 
-  // Extract geology metrics for cleaner code mapping
   const geo = data.geologyMetrics;
 
   return (
     <div className={styles.cardsContainer}>
-      {/* Top Level: The AI PINN Predictions */}
       <div className={styles.card}>
         <div className={styles.label}>Predicted Land Loss</div>
         <div className={`${styles.value} ${styles.danger}`}>{data.landLoss}</div>
@@ -25,11 +23,10 @@ export default function TelemetryCards({ data }: { data: any }) {
 
       <div className={styles.card}>
         <div className={styles.label}>Model Confidence</div>
-        <div className={styles.value}>{data.confidence}</div>
-        <div className={styles.subtext}>PINN Architecture</div>
+        <div className={styles.value}>{data.confidenceLevel}</div>
+        <div className={styles.subtext}>{data.confidenceReason}</div>
       </div>
 
-      {/* New Section: NAPE Geology Metrics */}
       {geo && (
         <>
           <div className={styles.card}>
@@ -48,7 +45,7 @@ export default function TelemetryCards({ data }: { data: any }) {
             <div className={styles.label}>Flooding Risk</div>
             <div 
               className={`${styles.value} ${geo.floodingVulnerability.includes("Severe") ? styles.danger : ""}`} 
-              style={{ fontSize: "1.5rem" }} // Scaled down slightly to fit the longer text
+              style={{ fontSize: "1.5rem" }}
             >
               {geo.floodingVulnerability.split(" ")[0]} 
             </div>
