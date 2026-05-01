@@ -59,7 +59,7 @@ export default function Home() {
     try {
       const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
       const pinColor = telemetry.risk === "Critical" ? "ff0000" : telemetry.risk === "Elevated" ? "ff8800" : "00ff00";
-      const staticMapUrl = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-l+${pinColor}(${location.lng},${location.lat})/${location.lng},${location.lat},13,0/800x400?access_token=${mapboxToken}`;
+      const staticMapUrl = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-s+${pinColor}(${location.lng},${location.lat})/${location.lng},${location.lat},13,0/800x400?access_token=${mapboxToken}`;
       
       const imgRes = await fetch(staticMapUrl);
       const imgBlob = await imgRes.blob();
