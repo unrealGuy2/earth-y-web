@@ -1,51 +1,110 @@
 "use client";
 
 import { useState } from "react";
-import styles from "./SearchPill.module.scss";
 
-export default function SearchPill({ 
-  onSearch, 
-  isLoading 
-}: { 
-  onSearch: (city: string) => void;
-  isLoading: boolean;
-}) {
-  const [input, setInput] = useState("");
+export default function SearchPill({ onSearch, isLoading }: { onSearch: (payload: any) => void, isLoading: boolean }) {
+  const [mode, setMode] = useState<"city" | "coords">("city");
+  const [city, setCity] = useState("");
+  const [lat, setLat] = useState("");
+  const [lng, setLng] = useState("");
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && input.trim() && !isLoading) {
-      onSearch(input.trim());
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isLoading) return;
+
+    if (mode === "city" && city.trim()) {
+      onSearch({ type: "city", city: city.trim() });
+    } else if (mode === "coords" && lat && lng) {
+      onSearch({ type: "coords", lat: parseFloat(lat), lng: parseFloat(lng) });
     }
   };
 
   return (
-    <div className={styles.pillContainer}>
-      {isLoading ? (
-        <svg className={styles.spinner} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="12" y1="2" x2="12" y2="6"></line>
-          <line x1="12" y1="18" x2="12" y2="22"></line>
-          <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
-          <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
-          <line x1="2" y1="12" x2="6" y2="12"></line>
-          <line x1="18" y1="12" x2="22" y2="12"></line>
-          <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
-          <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
-        </svg>
-      ) : (
-        <svg className={styles.icon} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-      )}
-      <input 
-        type="text" 
-        className={styles.input} 
-        placeholder={isLoading ? "Processing coastal physics..." : "Search location (e.g. Miami)..."}
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={handleKeyDown}
-        disabled={isLoading}
-      />
+    <div style={{
+      position: "absolute",
+      top: "8rem",
+      left: "50%",
+      transform: "translateX(-50%)",
+      background: "rgba(15, 15, 15, 0.8)",
+      backdropFilter: "blur(16px)",
+      border: "1px solid rgba(255, 255, 255, 0.1)",
+      padding: "1rem",
+      borderRadius: "16px",
+      zIndex: 10,
+      width: "90%",
+      maxWidth: "450px",
+      boxShadow: "0 20px 40px rgba(0,0,0,0.4)"
+    }}>
+      {/* The Mode Toggle */}
+      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", background: "rgba(255,255,255,0.05)", padding: "4px", borderRadius: "12px" }}>
+        <button
+          type="button"
+          onClick={() => setMode("city")}
+          style={{
+            flex: 1, padding: "8px 0", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "0.85rem", fontWeight: 500, transition: "all 0.2s",
+            background: mode === "city" ? "rgba(255,255,255,0.1)" : "transparent",
+            color: mode === "city" ? "#fff" : "#888"
+          }}
+        >
+          City Search
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("coords")}
+          style={{
+            flex: 1, padding: "8px 0", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "0.85rem", fontWeight: 500, transition: "all 0.2s",
+            background: mode === "coords" ? "rgba(255,255,255,0.1)" : "transparent",
+            color: mode === "coords" ? "#fff" : "#888"
+          }}
+        >
+          Coordinates (Offshore)
+        </button>
+      </div>
+
+      {/* The Search Form */}
+      <form onSubmit={handleSubmit} style={{ display: "flex", gap: "0.5rem" }}>
+        {mode === "city" ? (
+          <input
+            type="text"
+            placeholder="Enter coastal city (e.g., Lagos, Miami)"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            disabled={isLoading}
+            style={{ flex: 1, padding: "10px 16px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(0,0,0,0.5)", color: "#fff", outline: "none" }}
+          />
+        ) : (
+          <div style={{ display: "flex", gap: "0.5rem", flex: 1 }}>
+            <input
+              type="number"
+              step="any"
+              placeholder="Latitude"
+              value={lat}
+              onChange={(e) => setLat(e.target.value)}
+              disabled={isLoading}
+              style={{ flex: 1, minWidth: 0, padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(0,0,0,0.5)", color: "#fff", outline: "none" }}
+            />
+            <input
+              type="number"
+              step="any"
+              placeholder="Longitude"
+              value={lng}
+              onChange={(e) => setLng(e.target.value)}
+              disabled={isLoading}
+              style={{ flex: 1, minWidth: 0, padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(0,0,0,0.5)", color: "#fff", outline: "none" }}
+            />
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={isLoading}
+          style={{
+            padding: "0 20px", borderRadius: "8px", border: "none", background: isLoading ? "#333" : "#fff", color: "#000", fontWeight: 600, cursor: isLoading ? "not-allowed" : "pointer", transition: "0.2s"
+          }}
+        >
+          {isLoading ? "..." : "Scan"}
+        </button>
+      </form>
     </div>
   );
 }

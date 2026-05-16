@@ -43,7 +43,7 @@ export default function Home() {
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(100, 100, 100);
-    doc.text("Coastal Risk Projection Report", 20, yPos);
+    doc.text("Coastal & Offshore Risk Projection Report", 20, yPos);
     
     yPos += 5;
     doc.setDrawColor(200, 200, 200);
@@ -53,7 +53,7 @@ export default function Home() {
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(20, 20, 20);
-    doc.text(`Target Asset: ${telemetry.city.toUpperCase()} COASTLINE`, 20, yPos);
+    doc.text(`Target Asset: ${telemetry.city.toUpperCase()}`, 20, yPos);
     
     yPos += 10;
     try {
@@ -90,7 +90,7 @@ export default function Home() {
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(20, 20, 20);
-    doc.text(`Estimated ${telemetry.landLoss} shoreline retreat by ${telemetry.year}`, 20, yPos);
+    doc.text(telemetry.landLoss === "N/A (Offshore)" ? "Offshore Hazard Assessment" : `Estimated ${telemetry.landLoss} shoreline retreat by ${telemetry.year}`, 20, yPos);
     
     yPos += 10;
     
@@ -125,25 +125,26 @@ export default function Home() {
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(20, 20, 20);
-      doc.text("Geomorphological Profile (SRTM DEM)", 20, yPos);
+      doc.text("Geomorphological Profile (SRTM/GEBCO DEM)", 20, yPos);
       
       yPos += 8;
       doc.setFontSize(11);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(100, 100, 100);
       
-      doc.text(`Base Elevation: ${telemetry.geologyMetrics.elevation}`, 20, yPos);
-      doc.text(`Coastal Slope Gradient: ${telemetry.geologyMetrics.slopeGradient}`, 100, yPos);
+      // Changed to handle both Elevation and Depth strings gracefully
+      doc.text(`Topography/Depth: ${telemetry.geologyMetrics.elevation}`, 20, yPos);
+      doc.text(`Slope Gradient: ${telemetry.geologyMetrics.slopeGradient}`, 100, yPos);
       
       yPos += 8;
       if (telemetry.geologyMetrics.floodingVulnerability.includes("Severe")) doc.setTextColor(230, 0, 0);
       else doc.setTextColor(20, 20, 20);
-      doc.text(`Flooding Vulnerability: ${telemetry.geologyMetrics.floodingVulnerability}`, 20, yPos);
+      doc.text(`Hazard Vulnerability: ${telemetry.geologyMetrics.floodingVulnerability}`, 20, yPos);
       
       yPos += 8;
       if (telemetry.geologyMetrics.erosionSusceptibility.includes("High")) doc.setTextColor(230, 0, 0);
       else doc.setTextColor(20, 20, 20);
-      doc.text(`Erosion Susceptibility: ${telemetry.geologyMetrics.erosionSusceptibility}`, 20, yPos);
+      doc.text(`Erosion/Scour Susceptibility: ${telemetry.geologyMetrics.erosionSusceptibility}`, 20, yPos);
       
       doc.setTextColor(20, 20, 20);
     }
@@ -169,7 +170,7 @@ export default function Home() {
       doc.text(modelLines, 20, yPos);
       yPos += (modelLines.length * 6) + 2;
 
-      const constraintLines = doc.splitTextToSize("Projection derived from historical shoreline behavior and constrained by terrain-influenced hydrodynamic response.", 170);
+      const constraintLines = doc.splitTextToSize("Projection derived from historical behavior and constrained by terrain-influenced hydrodynamic response.", 170);
       doc.text(constraintLines, 20, yPos);
       yPos += (constraintLines.length * 6) + 5;
     }
@@ -196,11 +197,11 @@ export default function Home() {
 
     let recommendedNextStep = "";
     if (telemetry.risk === "Critical") {
-        recommendedNextStep = "Immediate detailed field survey and drainage/flood mitigation review are strongly recommended before any major construction, asset expansion, or capital deployment.";
+        recommendedNextStep = "Immediate detailed field survey, sonar profiling, or drainage/flood mitigation review are strongly recommended before any major construction or capital deployment.";
     } else if (telemetry.risk === "Elevated") {
-        recommendedNextStep = "Enhanced monitoring and localized hydrological review are recommended to prepare for potential long-term mitigation requirements.";
+        recommendedNextStep = "Enhanced monitoring and localized hydrological/benthic review are recommended to prepare for potential long-term mitigation requirements.";
     } else {
-        recommendedNextStep = "No immediate high-risk intervention required. Standard monitoring and periodic site review are sufficient based on current terrain and shoreline stability indicators.";
+        recommendedNextStep = "No immediate high-risk intervention required. Standard monitoring and periodic site review are sufficient based on current terrain and stability indicators.";
     }
 
     if (yPos > 240) { doc.addPage(); yPos = 20; } else { yPos += 10; }
@@ -238,7 +239,7 @@ export default function Home() {
     doc.setFontSize(10);
     doc.setFont("helvetica", "italic");
     doc.setTextColor(100, 100, 100);
-    const limitationLines = doc.splitTextToSize("This report is a preliminary risk screening tool and should not replace full geotechnical, hydrological, or field-based site investigations. All projections rely on available satellite telemetry and modeled fluid dynamics.", 170);
+    const limitationLines = doc.splitTextToSize("This report is a preliminary risk screening tool and should not replace full geotechnical, hydrological, sonar, or field-based site investigations. All projections rely on available satellite/bathymetric telemetry.", 170);
     doc.text(limitationLines, 20, yPos);
     yPos += (limitationLines.length * 6) + 5;
 
@@ -251,32 +252,55 @@ export default function Home() {
     doc.text("For preliminary infrastructure risk screening. Detailed site-specific analysis available upon request.", 20, pageHeight - 7);
     doc.setFont("helvetica", "normal");
     
-    doc.save(`Earth_Y_Report_${telemetry.city.replace(/\s+/g, '_')}.pdf`);
+    const safeFilename = telemetry.city.replace(/[^a-zA-Z0-9.\- ]/g, "").replace(/\s+/g, '_');
+    doc.save(`Earth_Y_Report_${safeFilename}.pdf`);
   };
 
-  const handleSearch = async (city: string) => {
+  const handleSearch = async (payload: any) => {
     setIsLoading(true);
     setError(null);
     setTelemetry(null);
 
     try {
-      const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-      const geoRes = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(city)}.json?access_token=${mapboxToken}`);
-      const geoData = await geoRes.json();
+      let targetLat, targetLng, targetCity;
 
-      if (!geoData.features || geoData.features.length === 0) {
-        setError("Location not found. Please verify the city name.");
-        setIsLoading(false);
-        return;
+      if (payload.type === "city") {
+        const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+        const geoRes = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(payload.city)}.json?access_token=${mapboxToken}`);
+        const geoData = await geoRes.json();
+
+        if (!geoData.features || geoData.features.length === 0) {
+          setError("Location not found. Please verify the city name.");
+          setIsLoading(false);
+          return;
+        }
+
+        [targetLng, targetLat] = geoData.features[0].center;
+        targetCity = payload.city;
+      } 
+      else if (payload.type === "coords") {
+        targetLat = payload.lat;
+        targetLng = payload.lng;
+        targetCity = `Offshore Coordinates [${targetLat.toFixed(4)}, ${targetLng.toFixed(4)}]`; 
       }
 
-      const [lng, lat] = geoData.features[0].center;
-      setLocation({ lat, lng });
+      setLocation({ lat: targetLat, lng: targetLng });
 
-      const response = await fetch("https://earth-y-engine.onrender.com/api/predict", {
+      // ==========================================
+      // API ENDPOINT TOGGLE
+      // Uncomment the one you want to use!
+      // ==========================================
+      
+      // PRODUCTION (Render Cloud)
+      // const API_URL = "https://earth-y-engine.onrender.com/api/predict";
+      
+      // LOCAL TESTING (Your Computer)
+     const API_URL = "https://earth-y-engine.onrender.com/api/predict";
+
+      const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ city: city, lat: lat, lng: lng }),
+        body: JSON.stringify({ city: targetCity, lat: targetLat, lng: targetLng }),
       });
       
       if (!response.ok) throw new Error("Backend connection failed.");
