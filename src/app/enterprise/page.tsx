@@ -25,7 +25,8 @@ export default function EnterpriseDashboard() {
     for (let i = 0; i < assets.length; i++) {
       const asset = assets[i];
       try {
-        const response = await fetch("https://earth-y-engine.onrender.com", {
+        // FIXED URL: Added /api/predict
+        const response = await fetch("https://earth-y-engine.onrender.com/api/predict", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(asset),

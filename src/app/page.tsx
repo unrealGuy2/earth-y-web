@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import jsPDF from "jspdf";
 import Map from "../components/Map";
 import SearchPill from "../components/SearchPill";
@@ -285,10 +286,8 @@ export default function Home() {
 
       setLocation({ lat: targetLat, lng: targetLng });
 
-      // ==========================================
-      // API ENDPOINT
-      // ==========================================
-      const API_URL = "https://earth-y-engine.onrender.com"; // LOCAL TESTING
+      // PRODUCTION AI ENDPOINT
+      const API_URL = "https://earth-y-engine.onrender.com/api/predict";
 
       const response = await fetch(API_URL, {
         method: "POST",
@@ -321,11 +320,36 @@ export default function Home() {
         </div>
       )}
 
-      {/* LEFT COMMAND CENTER (Search Pill handles its own positioning internally) */}
+      {/* TOP RIGHT - ENTERPRISE PORTAL BUTTON */}
+      <div style={{ position: "absolute", top: "2rem", right: "2rem", zIndex: 20 }}>
+        <Link href="/enterprise" style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          padding: "0.75rem 1.5rem",
+          background: "rgba(16, 185, 129, 0.15)", // Premium emerald tint
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+          border: "1px solid rgba(16, 185, 129, 0.4)",
+          boxShadow: "0 10px 30px rgba(16, 185, 129, 0.2), inset 0 1px 0 rgba(255,255,255,0.1)",
+          borderRadius: "12px",
+          textDecoration: "none",
+          color: "#10b981",
+          fontWeight: 700,
+          fontSize: "0.9rem",
+          transition: "all 0.3s ease"
+        }}>
+          {/* Inline SVG Briefcase Icon */}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+          Enterprise Portal
+        </Link>
+      </div>
+
+      {/* LEFT COMMAND CENTER */}
       <SearchPill onSearch={handleSearch} isLoading={isLoading} />
       
-      {/* RIGHT COMMAND CENTER (Target Asset Box - Moved UP to 2rem) */}
-      <div style={{ position: "absolute", top: "2rem", right: "2rem", zIndex: 10 }}>
+      {/* RIGHT COMMAND CENTER (Target Asset Box - Moved to 6rem to avoid hitting the new button) */}
+      <div style={{ position: "absolute", top: "6rem", right: "2rem", zIndex: 10 }}>
         <TelemetryCards data={telemetry} year={year} setYear={setYear} />
       </div>
 
