@@ -25,7 +25,7 @@ export default function EnterpriseDashboard() {
     for (let i = 0; i < assets.length; i++) {
       const asset = assets[i];
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/predict", {
+        const response = await fetch("https://earth-y-engine.onrender.com", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(asset),
@@ -148,7 +148,7 @@ export default function EnterpriseDashboard() {
                   <th style={{ padding: "1.5rem" }}>Asset Name</th>
                   <th style={{ padding: "1.5rem" }}>Coordinates</th>
                   <th style={{ padding: "1.5rem" }}>Environment</th>
-                  <th style={{ padding: "1.5rem" }}>Primary Threat / Status</th>
+                  <th style={{ padding: "1.5rem" }}>Status</th>
                   <th style={{ padding: "1.5rem" }}>Risk Level</th>
                 </tr>
               </thead>

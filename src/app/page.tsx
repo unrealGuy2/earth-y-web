@@ -288,7 +288,7 @@ export default function Home() {
       // ==========================================
       // API ENDPOINT
       // ==========================================
-      const API_URL = "http://127.0.0.1:8000/api/predict"; // LOCAL TESTING
+      const API_URL = "https://earth-y-engine.onrender.com"; // LOCAL TESTING
 
       const response = await fetch(API_URL, {
         method: "POST",
